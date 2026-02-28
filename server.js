@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-import { WebSocketServer } from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 
 function mustGetEnv(name) {
   const v = process.env[name];
@@ -24,9 +24,9 @@ app.post("/telnyx/voice", (req, res) => {
 app.get("/health/realtime", async (req, res) => {
   try {
     const ws = new WebSocket(
-      "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",
-      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
-    );
+  "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",
+  { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
+);
 
     const t = setTimeout(() => {
       try { ws.close(); } catch {}
