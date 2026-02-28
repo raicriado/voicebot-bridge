@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-import WebSocket from "ws";
+import { WebSocketServer } from "ws";
 
 function mustGetEnv(name) {
   const v = process.env[name];
@@ -50,7 +50,7 @@ app.get("/health/realtime", async (req, res) => {
 
 // WebSocket para Telnyx Media (placeholder)
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, path: "/telnyx/media" });
+const wss = new WebSocketServer({ server, path: "/telnyx/media" });
 
 wss.on("connection", (socket) => {
   socket.send(JSON.stringify({ ok: true, msg: "telnyx media ws up" }));
