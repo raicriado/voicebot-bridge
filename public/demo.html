@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Voice Demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    button { padding: 10px 14px; font-size: 16px; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 8px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h2>Demo voz ↔ voz (OpenAI Realtime)</h2>
+  <button id="start">Start</button>
+  <button id="stop" disabled>Stop</button>
+  <p id="status">Idle</p>
+  <pre id="log"></pre>
+
+  <audio id="remoteAudio" autoplay></audio>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const startBtn = document.getElementById("start");
+    const stopBtn = document.getElementById("stop");
+    const remoteAudio = document.getElementById("remoteAudio");
+
+    let pc, dc, localStream;
+
+    function log(...args) {
+      const line = args.map(a => (typeof a === "string" ? a : JSON.stringify(a))).join(" ");
+      logEl.textContent += line + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function start() {
+      startBtn.disabled = true;
+      statusEl.textContent = "Requesting mic…";
+
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      statusEl.textContent = "Fetching ephemeral key…";
+
+      const r = await fetch("/auth/ephemeral");
+      const data = await r.json();
+      if (!data.ok) {
+        log("ephemeral error", data);
+        statusEl.textContent = "Ephemeral error";
+        startBtn.disabled = false;
+        return;
+      }
+
+      const ephemeralKey = data.client_secret?.value;
+      if (!ephemeralKey) {
+        log("missing client_secret", data);
+        statusEl.textContent = "Missing client_secret";
+        startBtn.disabled = false;
+        return;
+      }
+
+      statusEl.textContent = "Connecting WebRTC…";
+
+      pc = new RTCPeerConnection();
+
+      // audio out
+      pc.ontrack = (event) => {
+        remoteAudio.srcObject = event.streams[0];
+      };
+
+      // send mic
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      // data channel for events (optional)
+      dc = pc.createDataChannel("oai-events");
+      dc.onopen = () => log("data channel open");
+      dc.onmessage = (e) => log("event", e.data);
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const sdpResponse = await fetch("https://api.openai.com/v1/realtime", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${ephemeralKey}`,
+          "Content-Type": "application/sdp"
+        },
+        body: offer.sdp
+      });
+
+      const answerSdp = await sdpResponse.text();
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+
+      statusEl.textContent = "Live ✅ Habla al micro.";
+      stopBtn.disabled = false;
+    }
+
+    async function stop() {
+      stopBtn.disabled = true;
+      statusEl.textContent = "Stopping…";
+
+      try { dc?.close(); } catch {}
+      try { pc?.close(); } catch {}
+      try { localStream?.getTracks()?.forEach(t => t.stop()); } catch {}
+
+      statusEl.textContent = "Idle";
+      startBtn.disabled = false;
+    }
+
+    startBtn.onclick = () => start().catch(err => { log("start err", String(err)); statusEl.textContent = "Error"; startBtn.disabled=false; });
+    stopBtn.onclick = () => stop().catch(err => log("stop err", String(err)));
+  </script>
+</body>
+</html>
