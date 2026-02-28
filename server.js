@@ -59,3 +59,29 @@ wss.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+// “mint” de ephemeral key
+app.get("/auth/ephemeral", async (req, res) => {
+  try {
+    // Crea sesión Realtime y devuelve ephemeral key para el navegador
+    const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-realtime-preview",
+        // puedes meter instrucciones aquí si quieres
+      }),
+    });
+
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json({ ok: false, data });
+
+    // suele venir algo tipo { client_secret: { value: "..." } }
+    return res.json({ ok: true, client_secret: data.client_secret });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || "server_error" });
+  }
+});
