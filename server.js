@@ -26,7 +26,7 @@ app.post("/telnyx/voice", (req, res) => {
 app.get("/health/realtime", async (req, res) => {
   try {
     const ws = new WebSocket(
-  "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",
+  "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5",
   { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
 );
 
@@ -60,10 +60,9 @@ app.get("/auth/ephemeral", async (req, res) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-  model: "gpt-realtime-mini",
+  model: "gpt-realtime-1.5",
   voice: "marin",
 }),
-    });
 
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ ok: false, data });
