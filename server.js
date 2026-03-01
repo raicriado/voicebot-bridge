@@ -12,6 +12,8 @@ function mustGetEnv(name) {
 
 const OPENAI_API_KEY = mustGetEnv("OPENAI_API_KEY");
 
+const DEMO_TOKEN = (process.env.DEMO_TOKEN || "").trim();
+
 const app = express();
 app.use(express.json({ limit: "2mb" }));
 
@@ -53,6 +55,12 @@ app.get("/health/realtime", async (req, res) => {
 // endpoint para “mint” de ephemeral key
 app.get("/auth/ephemeral", async (req, res) => {
   try {
+    if (DEMO_TOKEN) {
+  const t = req.query.t;
+  if (typeof t !== "string" || t !== DEMO_TOKEN) {
+    return res.status(401).json({ ok: false, error: "unauthorized" });
+  }
+}
     const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
