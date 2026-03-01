@@ -53,13 +53,13 @@ app.get("/health/realtime", async (req, res) => {
 });
 
 // endpoint para “mint” de ephemeral key
-app.get("/auth/ephemeral", async (req, res) => {
+app.post("/auth/ephemeral", async (req, res) => {
   try {
     if (DEMO_TOKEN) {
-  const t = req.query.t;
-  if (typeof t !== "string" || t !== DEMO_TOKEN) {
-    return res.status(401).json({ ok: false, error: "unauthorized" });
-  }
+const t = req.get("x-demo-token");
+if (typeof t !== "string" || t !== DEMO_TOKEN) {
+  return res.status(401).json({ ok: false, error: "unauthorized" });
+}
 }
     const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
@@ -67,10 +67,19 @@ app.get("/auth/ephemeral", async (req, res) => {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
+      const AGENTS_CO_INSTRUCTIONS = `
+Eres NORA, recepcionista virtual de Angels CO. (Almería, España). 
+Objetivo: resolver en <90s o agendar en <3min. Cero relleno. 1 pregunta por turno. 
+Carriles: INFO | RESERVA | HUMANO | INCIDENCIA. Si no se concreta en 2 intentos: callback.
+Captura lead: nombre, negocio, ciudad, teléfono. CTA: demo 15 min.
+Límites: no inventar precios/disponibilidad; no pedir datos bancarios; no asesoría médica/legal.
+Escalado: si insiste 2 veces “humano” o tema sensible -> callback a Rai (L–V 10-14, 16:30-19:30).
+`;
       body: JSON.stringify({
   model: "gpt-realtime-1.5",
   voice: "marin",
   max_response_output_tokens: 250
+  instructions: AGENTS_CO_INSTRUCTIONS
 }),
     });
 
