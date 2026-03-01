@@ -68,9 +68,10 @@ app.get("/auth/ephemeral", async (req, res) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-realtime-1.5",
-        voice: "marin",
-      }),
+  model: "gpt-realtime-1.5",
+  voice: "marin",
+  max_response_output_tokens: 250
+}),
     });
 
     const data = await r.json();
