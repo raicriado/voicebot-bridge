@@ -60,16 +60,22 @@ app.get("/auth/ephemeral", async (req, res) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-  model: "gpt-realtime-1.5",
-  voice: "marin",
-}),
+        model: "gpt-realtime-1.5",
+        voice: "marin",
+      }),
+    });
 
     const data = await r.json();
-    if (!r.ok) return res.status(r.status).json({ ok: false, data });
+
+    if (!r.ok) {
+      return res.status(r.status).json({ ok: false, data });
+    }
 
     return res.json({ ok: true, client_secret: data.client_secret });
   } catch (e) {
-    return res.status(500).json({ ok: false, error: e?.message || "server_error" });
+    return res
+      .status(500)
+      .json({ ok: false, error: e?.message || "server_error" });
   }
 });
 
