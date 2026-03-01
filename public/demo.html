@@ -41,7 +41,7 @@
       localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       statusEl.textContent = "Fetching ephemeral key…";
 
-      const r = await fetch("/auth/ephemeral");
+      const r = await fetch("/auth/ephemeral?t=RaiDemo_9xK3pQ_2026");
       const data = await r.json();
       if (!data.ok) {
         log("ephemeral error", data);
