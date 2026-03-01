@@ -78,7 +78,7 @@
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      const sdpResponse = await fetch("https://api.openai.com/v1/realtime", {
+      const sdpResponse = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime-mini", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${ephemeralKey}`,
