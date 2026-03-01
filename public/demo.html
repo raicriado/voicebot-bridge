@@ -53,13 +53,6 @@ async function getEphemeral() {
   if (!r.ok) throw new Error(data?.error || "auth_failed");
   return data.client_secret;
 }
-      const data = await r.json();
-      if (!data.ok) {
-        log("ephemeral error", data);
-        statusEl.textContent = "Ephemeral error";
-        startBtn.disabled = false;
-        return;
-      }
 
       const ephemeralKey = data.client_secret?.value;
       if (!ephemeralKey) {
