@@ -41,7 +41,18 @@
       localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       statusEl.textContent = "Fetching ephemeral key…";
 
-      const r = await fetch("/auth/ephemeral?t=RaiDemo_9xK3pQ_2026");
+async function getEphemeral() {
+  const r = await fetch("/auth/ephemeral", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-demo-token": "PON_AQUI_TU_TOKEN_DEMO"
+    }
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data?.error || "auth_failed");
+  return data.client_secret;
+}
       const data = await r.json();
       if (!data.ok) {
         log("ephemeral error", data);
